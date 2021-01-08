@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import express from 'express';
+import express, { Request, Response } from 'express';
 import { ApolloServer } from 'apollo-server-express';
 import { getSchema } from './utils/getSchema';
 import dotenv from 'dotenv-safe';
@@ -33,6 +33,12 @@ const main = async () =>
         windowMs: 10 * 60 * 1000,   // Max 100 reqs per 10 minutes
         max: 100
     } ) );
+
+    app.get( '/', ( _: Request, res: Response ) =>
+    {
+        res.send( 'API up and runnin' );
+        res.end();
+    } );
 
     app.use( session( {
         store: new MongoStore( { mongooseConnection: mongoose.connection } ),
