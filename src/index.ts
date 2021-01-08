@@ -12,6 +12,7 @@ import connectMongo from 'connect-mongo';
 import { connectDB } from './utils/connectDB';
 import mongoose from 'mongoose';
 import { devLogger } from './utils/dev';
+import { isProd } from './utils/constants';
 
 const main = async () =>
 {
@@ -46,9 +47,10 @@ const main = async () =>
         resave: false,
         saveUninitialized: false,
         cookie: {
-            sameSite: 'none',
+            sameSite: 'lax',
             httpOnly: true,
-            secure: true,
+            secure: isProd(),
+            domain: '.tsnode.tk',
             maxAge: 1000 * 60 * 60 * 24     // 1 day
         }
     } ) );
