@@ -42,15 +42,14 @@ const main = async () =>
 
     app.use( session( {
         store: new MongoStore( { mongooseConnection: mongoose.connection } ),
-        name: 'boil',
+        name: 'ts',
         secret: process.env.SESSION_SECRET,
         resave: false,
         saveUninitialized: false,
         cookie: {
-            sameSite: 'lax',
+            sameSite: 'none',
             httpOnly: true,
-            secure: isProd(),
-            domain: isProd() ? process.env.DOMAIN : undefined,
+            secure: true,
             maxAge: 1000 * 60 * 60 * 24     // 1 day
         }
     } ) );
