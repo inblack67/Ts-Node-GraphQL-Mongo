@@ -50,7 +50,6 @@ const main = async () =>
             sameSite: 'lax',
             httpOnly: true,
             secure: isProd(),
-            domain: '.tsnode.tk',
             maxAge: 1000 * 60 * 60 * 24     // 1 day
         }
     } ) );
