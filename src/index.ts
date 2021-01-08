@@ -4,7 +4,6 @@ import { ApolloServer } from 'apollo-server-express';
 import { getSchema } from './utils/getSchema';
 import dotenv from 'dotenv-safe';
 import 'colors';
-import { isProd } from './utils/constants';
 import session from 'express-session';
 import { MyContext } from './utils/types';
 import cors from 'cors';
@@ -26,7 +25,7 @@ const main = async () =>
 
     app.use( cors( {
         credentials: true,
-        origin: isProd() ? process.env.CLIENT_URL : 'http://localhost:3000'
+        origin: `https://app.tsnode.tk`
     } ) );
 
     app.use( rateLimit( {
@@ -64,7 +63,7 @@ const main = async () =>
         }
     } );
 
-    apolloServer.applyMiddleware( { app } );
+    apolloServer.applyMiddleware( { app, cors: false } );
 
     const PORT = process.env.PORT || 5000;
     app.listen( PORT, () =>
