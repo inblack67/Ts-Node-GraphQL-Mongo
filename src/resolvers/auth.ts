@@ -1,10 +1,11 @@
 import { MyContext } from "../utils/types";
 import { Ctx, Mutation, Query, UseMiddleware, Resolver, Arg } from "type-graphql";
 import { isAuthenticated, isFree } from '../middlewares/auth';
-import { UserEntity } from "../entities/User";
+import { UserEntity, UserModel } from "../entities/User";
 import argon from 'argon2';
 import { ErrorResponse } from "../utils/ErrorResponse";
-import { NOT_AUTHENTICATED, INVALID_CREDENTIALS } from "../utils/constants";
+import { INVALID_CREDENTIALS } from "../utils/constants";
+import { devLogger } from "../utils/dev";
 
 @Resolver()
 export class AuthResolver
@@ -14,12 +15,10 @@ export class AuthResolver
     async getMe (
         @Ctx()
         { session }: MyContext
-    ): Promise<UserEntity | undefined>
+    )
     {
-
-        const currentUser = await UserEntity.findOne( { id: session.user as number } );
-
-        return currentUser;
+        const user = await UserModel.findById( session.user );
+        return user;
     }
 
     @UseMiddleware( isFree )
@@ -31,14 +30,18 @@ export class AuthResolver
         name: string,
         @Arg( 'email' )
         email: string,
+        @Arg( 'username' )
+        username: string,
         @Arg( 'password' )
         password: string
-    ): Promise<UserEntity>
+    )
     {
         const hashedPassword = await argon.hash( password );
-        const newUser = await UserEntity.create( { name, email, password: hashedPassword } ).save();
 
-        session.user = newUser.id;
+        const newUser = await UserModel.create( { name, username, email, password: hashedPassword } as UserEntity );
+
+        session.user = newUser._id;
+        session.username = newUser.username;
 
         return newUser;
     }
@@ -46,15 +49,15 @@ export class AuthResolver
     @UseMiddleware( isFree )
     @Mutation( () => UserEntity )
     async loginUser (
-        @Arg( 'email' )
-        email: string,
+        @Arg( 'username' )
+        username: string,
         @Arg( 'password' )
         password: string,
         @Ctx()
         { session }: MyContext
-    ): Promise<UserEntity>
+    )
     {
-        const user = await UserEntity.findOne( { email } );
+        const user = await UserModel.findOne( { username } );
 
         if ( !user )
         {
@@ -69,7 +72,8 @@ export class AuthResolver
             throw new ErrorResponse( INVALID_CREDENTIALS, 401 );
         }
 
-        session.user = user.id;
+        session.user = user._id;
+        session.username = user.username;
 
         return user;
     }
@@ -79,21 +83,14 @@ export class AuthResolver
     async logoutUser (
         @Ctx()
         { session }: MyContext
-    ): Promise<boolean>
+    )
     {
-        const user = await UserEntity.findOne( session.user );
-
-        if ( !user )
-        {
-            throw new ErrorResponse( NOT_AUTHENTICATED, 401 );
-        }
-
         session.destroy( err =>
         {
             if ( err )
             {
-                console.log( `Session destruction error:`.red.bold );
-                console.error( err );
+                devLogger( `Session destruction error:`.red.bold );
+                throw err;
             }
         } );
 

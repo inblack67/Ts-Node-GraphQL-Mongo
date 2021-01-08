@@ -2,36 +2,25 @@ import 'reflect-metadata';
 import express from 'express';
 import { ApolloServer } from 'apollo-server-express';
 import { getSchema } from './utils/getSchema';
-import dotenv from 'dotenv';
+import dotenv from 'dotenv-safe';
 import 'colors';
-import { createConnection } from 'typeorm';
 import { isProd } from './utils/constants';
-import { UserEntity } from './entities/User';
 import session from 'express-session';
-import Redis from 'ioredis';
-import connectRedis from 'connect-redis';
 import { MyContext } from './utils/types';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
+import connectMongo from 'connect-mongo';
+import { connectDB } from './utils/connectDB';
+import mongoose from 'mongoose';
+import { devLogger } from './utils/dev';
 
 const main = async () =>
 {
-    dotenv.config( { path: '.env.local' } );
+    dotenv.config();
 
-    const RedisClient = new Redis();
-    const RedisStore = connectRedis( session );
+    await connectDB();
 
-    await createConnection( {
-        type: 'postgres',
-        database: 'airbnb',
-        username: process.env.POSTGRES_USERNAME,
-        password: process.env.POSTGRES_PASSWORD,
-        entities: [ UserEntity ],
-        synchronize: true,
-        logging: !isProd()
-    } );
-
-    console.log( `Postgres is here`.blue.bold );
+    const MongoStore = connectMongo( session );
 
     const app = express();
 
@@ -46,9 +35,9 @@ const main = async () =>
     } ) );
 
     app.use( session( {
-        store: new RedisStore( { client: RedisClient } ),
-        name: 'airbnb',
-        secret: process.env.SESSION_SECRET!,
+        store: new MongoStore( { mongooseConnection: mongoose.connection } ),
+        name: 'boil',
+        secret: process.env.SESSION_SECRET,
         resave: false,
         saveUninitialized: false,
         cookie: {
@@ -62,7 +51,12 @@ const main = async () =>
 
     const apolloServer = new ApolloServer( {
         schema: await getSchema(),
-        context: ( { req, res } ): MyContext => ( { req, res, session: req?.session } )
+        context: ( { req, res } ): MyContext => ( { req, res, session: req.session } ),
+        playground: {
+            settings: {
+                "request.credentials": "include"
+            }
+        }
     } );
 
     apolloServer.applyMiddleware( { app } );
@@ -70,7 +64,7 @@ const main = async () =>
     const PORT = process.env.PORT || 5000;
     app.listen( PORT, () =>
     {
-        console.log( `Server started on port ${ PORT }`.green.bold );
+        devLogger( `Server started on port ${ PORT }`.green.bold );
     } );
 };
 

@@ -1,28 +1,32 @@
+import { getModelForClass, prop } from "@typegoose/typegoose";
 import { Field, ObjectType } from "type-graphql";
-import { BaseEntity, Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { v4 } from 'uuid';
 
 @ObjectType()
-@Entity()
-export class UserEntity extends BaseEntity
+export class UserEntity
 {
-
-    @Field( () => Number )
-    @PrimaryGeneratedColumn()
-    id: number;
-
-    @Field()
-    @Column()
-    name: string;
-
-    @Field()
-    @Column( { unique: true } )
-    email: string;
-
-    @Column()
-    password: string;
+    @Field( () => String )
+    @prop( { default: v4() } )
+    id: string;
 
     @Field( () => String )
-    @CreateDateColumn()
+    @prop( { required: true } )
+    name: string;
+
+    @Field( () => String )
+    @prop( { unique: true, required: true } )
+    email: string;
+
+    @Field( () => String )
+    @prop( { unique: true, required: true } )
+    username: string;
+
+    @Field( () => Date )
+    @prop( { default: new Date() } )
     createdAt: Date;
 
+    @prop( { minlength: [ 8, 'Password must be 8 chars at min' ] } )
+    password: string;
 }
+
+export const UserModel = getModelForClass( UserEntity );
