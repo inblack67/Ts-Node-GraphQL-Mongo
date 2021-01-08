@@ -7,9 +7,8 @@
     - TypeScript
     - Node.js
     - Express
-    - Postgres
-    - Typeorm
+    - MongoDB
+    - Typegoose
     - GraphQL
     - Type GraphQL
     - Apollo
-    - Redis
