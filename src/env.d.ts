@@ -3,5 +3,6 @@ declare namespace NodeJS {
     SESSION_SECRET: string;
     MONGO_URI: string;
     NODE_ENV: string;
+    CLIENT_URL: string;
   }
 }

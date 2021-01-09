@@ -26,7 +26,7 @@ const main = async () =>
 
     app.use( cors( {
         credentials: true,
-        origin: `https://app.tsnode.tk`
+        origin: process.env.CLIENT_URL
     } ) );
 
     app.use( rateLimit( {
@@ -50,6 +50,7 @@ const main = async () =>
             sameSite: 'lax',
             httpOnly: true,
             secure: isProd(),
+            domain: undefined,
             maxAge: 1000 * 60 * 60 * 24     // 1 day
         }
     } ) );
