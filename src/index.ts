@@ -49,10 +49,10 @@ const main = async () =>
         resave: false,
         saveUninitialized: false,
         cookie: {
-            sameSite: 'lax',
+            sameSite: 'none',
             httpOnly: true,
             secure: isProd(),
-            domain: undefined,
+            // domain: '.tsnode.tk',
             maxAge: 1000 * 60 * 60 * 24     // 1 day
         }
     } ) );
