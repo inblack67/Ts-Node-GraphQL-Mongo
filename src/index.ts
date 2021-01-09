@@ -52,7 +52,6 @@ const main = async () =>
             sameSite: 'none',
             httpOnly: true,
             secure: isProd(),
-            // domain: '.tsnode.tk',
             maxAge: 1000 * 60 * 60 * 24     // 1 day
         }
     } ) );
@@ -60,7 +59,7 @@ const main = async () =>
     const apolloServer = new ApolloServer( {
         schema: await getSchema(),
         context: ( { req, res } ): MyContext => ( { req, res, session: req.session } ),
-        playground: {
+        playground: isProd() ? false : {
             settings: {
                 "request.credentials": "include"
             }
