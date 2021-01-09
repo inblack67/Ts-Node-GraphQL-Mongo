@@ -13,6 +13,7 @@ import { connectDB } from './utils/connectDB';
 import mongoose from 'mongoose';
 import { devLogger } from './utils/dev';
 import { isProd } from './utils/constants';
+import { createServer } from 'http';
 
 const main = async () =>
 {
@@ -23,6 +24,7 @@ const main = async () =>
     const MongoStore = connectMongo( session );
 
     const app = express();
+    const ws = createServer( app );
 
     app.set( 'trust proxy', 1 );
 
@@ -58,7 +60,7 @@ const main = async () =>
 
     const apolloServer = new ApolloServer( {
         schema: await getSchema(),
-        context: ( { req, res } ): MyContext => ( { req, res, session: req.session } ),
+        context: ( { req, res } ): MyContext => ( { req, res, session: req?.session } ),
         playground: isProd() ? false : {
             settings: {
                 "request.credentials": "include"
@@ -66,10 +68,11 @@ const main = async () =>
         }
     } );
 
+    apolloServer.installSubscriptionHandlers( ws );
     apolloServer.applyMiddleware( { app, cors: false } );
 
     const PORT = process.env.PORT || 5000;
-    app.listen( PORT, () =>
+    ws.listen( PORT, () =>
     {
         devLogger( `Server started on port ${ PORT }`.green.bold );
     } );
